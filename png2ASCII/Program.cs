@@ -7,16 +7,19 @@ namespace png2ASCII
 {
     internal static class Program
     {
-        public static string Alphabet = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.";
+        public static string Alphabet = " .:=+*#%@";
 
         public const int Width = 240;
         public const int Height = 60;
+
+        public const int Scaling = 2;
+        public const float HeightMix = 0.7f;
 
         private static void Main(string[] args)
         {
             Console.SetWindowSize(Width, Height);
             var img = Image.FromFile("test.jpg");
-            var resized = ResizeImage(img, Width, Height * 2);
+            var resized = ResizeImage(img, Width * Scaling, Height * 2 * Scaling);
             resized.Save("out1.png", ImageFormat.Png);
             var gray = GrayScaleFilter(resized);
             gray.Save("out2.png", ImageFormat.Png);
@@ -24,9 +27,15 @@ namespace png2ASCII
             for (var i = 0; i < Height; i++)
             for (var j = 0; j < Width; j++)
             {
-                var index = (int)(gray.GetPixel(j, i * 2).R * (Alphabet.Length - 1) * 0.75f / 255f +
-                             gray.GetPixel(j, i * 2 + 1).R * (Alphabet.Length - 1) * 0.25f / 255f);
-                Console.Write(Alphabet[index]);
+                float index = 0;
+                for (var k = 0; k < Scaling * Scaling; k++)
+                {
+                    index += gray.GetPixel(j * Scaling + k % Scaling, i * 2 * Scaling + k / Scaling).R * HeightMix;
+                    index += gray.GetPixel(j * Scaling + k % Scaling, (i * 2 + 1) * Scaling + k / Scaling).R * (1-HeightMix);
+                }
+
+                var brightness = (int)(index / (Scaling * Scaling * 255) * Alphabet.Length);
+                Console.Write(Alphabet[brightness]);
             }
 
             Console.ReadLine();
