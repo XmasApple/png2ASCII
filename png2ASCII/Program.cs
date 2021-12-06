@@ -11,26 +11,27 @@ namespace png2ASCII
 
         public const int Width = 240;
         public const int Height = 60;
-        
+
         private static void Main(string[] args)
         {
             Console.SetWindowSize(Width, Height);
             var img = Image.FromFile("test.jpg");
-            var resized = ResizeImage(img, Width, Height);
+            var resized = ResizeImage(img, Width, Height * 2);
             resized.Save("out1.png", ImageFormat.Png);
             var gray = GrayScaleFilter(resized);
             gray.Save("out2.png", ImageFormat.Png);
-            
+
             for (var i = 0; i < Height; i++)
             for (var j = 0; j < Width; j++)
             {
-                var index = gray.GetPixel(j, i).R * (Alphabet.Length-1) / 255;
+                var index = (int)(gray.GetPixel(j, i * 2).R * (Alphabet.Length - 1) * 0.75f / 255f +
+                             gray.GetPixel(j, i * 2 + 1).R * (Alphabet.Length - 1) * 0.25f / 255f);
                 Console.Write(Alphabet[index]);
             }
 
             Console.ReadLine();
         }
-        
+
         public static Bitmap GrayScaleFilter(Bitmap image)
         {
             var grayScale = new Bitmap(image.Width, image.Height);
@@ -44,9 +45,10 @@ namespace png2ASCII
 
                 grayScale.SetPixel(x, y, Color.FromArgb(gs, gs, gs));
             }
+
             return grayScale;
         }
-        
+
         public static Bitmap ResizeImage(Image image, int width, int height)
         {
             var destRect = new Rectangle(0, 0, width, height);
@@ -65,7 +67,7 @@ namespace png2ASCII
                 using (var wrapMode = new ImageAttributes())
                 {
                     wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    graphics.DrawImage(image, destRect, 0, 0, image.Width,image.Height, GraphicsUnit.Pixel, wrapMode);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
                 }
             }
 
